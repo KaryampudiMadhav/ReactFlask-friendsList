@@ -12,15 +12,39 @@ import {
 } from "@chakra-ui/react";
 import { BiTrash } from "react-icons/bi";
 import EditModal from './EditModel';
+import { BASE_URL } from './../App';
 
-const UserCard = ({ user }) => {
+const UserCard = ({ user ,setUsers}) => {
+   const toast = useToast()
+  const handleDelete = async(id)=>{
+    try {
+       const res = await fetch(BASE_URL + `/friends/${id}`, {
+         method: "DELETE",
+       });
+
+       const data = await res.json();
+
+       setUsers((prev) => prev.filter((item) => item.id !== id));
+
+       toast({
+         status: "success",
+         title: "Yayy! 🎉",
+         description: "Friend Deleted successfully.",
+         duration: 2000,
+         position: "top-center",
+       });
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   return (
     <Card>
       <CardHeader>
         <Flex gap={4}>
           <Flex flex={"1"} gap={"4"} alignItems={"center"}>
-            <Avatar src={user.imgUrl} />
+            <Avatar src={user.image_url} />
 
             <Box>
               <Heading size="sm">{user.name}</Heading>
@@ -29,13 +53,14 @@ const UserCard = ({ user }) => {
           </Flex>
 
           <Flex>
-            <EditModal />
+            <EditModal user = {user} setUsers={setUsers}  />
             <IconButton
               variant="ghost"
               colorScheme="red"
               size={"sm"}
               aria-label="See menu"
               icon={<BiTrash size={20} />}
+              onClick={() => handleDelete(user.id)}
             />
           </Flex>
         </Flex>

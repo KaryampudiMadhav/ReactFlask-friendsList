@@ -17,10 +17,69 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import { BiAddToQueue } from "react-icons/bi";
+import { BASE_URL } from "../App";
 
-const CreateUserModal = () => {
+const CreateUserModal = ({setUsers}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast()
+  const [loading,setLoading] = useState(false)
+
+  const [data ,setData] = useState({
+    name : "",
+    gender : "",
+    role : "",
+    description : ""
+  })
+
+  const handleSubmit = async(e)=>{
+    e.preventDefault()
+   setLoading(true)
+    try {
+      const res = await fetch(BASE_URL + "/friends",{
+        method : "POST",
+        headers : {
+          "Content-Type" : "application/json"
+        },
+        body : JSON.stringify(data)
+      });
+
+      const resData  = await res.json()
+
+      if(!res.ok){
+          throw new Error(resData.error)
+      }
+      setUsers((prev) => [...prev, resData]);
+      toast({
+        status: "success",
+        title: "Yayy! 🎉",
+        description: "Friend created successfully.",
+        duration: 2000,
+        position: "top-center",
+      });
+
+      onClose();
+    } catch (error) {
+       console.log(error);
+        toast({
+          status: "error",
+          title: "Error",
+          description: "Friend not created successfully.",
+          duration: 2000,
+          position: "top-center",
+        });
+
+    }finally{
+      setData({
+        name: "",
+        role: "",
+        description: "",
+        gender: "",
+      }); 
+      setLoading(false)
+    }
+  }
 
   return (
     <>
@@ -30,7 +89,7 @@ const CreateUserModal = () => {
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <form>
+        <form onSubmit={handleSubmit}>
           <ModalContent>
             <ModalHeader> My new BFF 😍 </ModalHeader>
             <ModalCloseButton />
@@ -42,7 +101,8 @@ const CreateUserModal = () => {
                   <FormLabel>Full Name</FormLabel>
                   <Input
                     placeholder="John Doe"
-                    
+                    value={data.name}
+                    onChange={(e) => setData({ ...data, name: e.target.value })}
                   />
                 </FormControl>
 
@@ -51,7 +111,8 @@ const CreateUserModal = () => {
                   <FormLabel>Role</FormLabel>
                   <Input
                     placeholder="Software Engineer"
-                    
+                    value={data.role}
+                    onChange={(e) => setData({ ...data, role: e.target.value })}
                   />
                 </FormControl>
               </Flex>
@@ -62,7 +123,10 @@ const CreateUserModal = () => {
                   resize={"none"}
                   overflowY={"hidden"}
                   placeholder="He's a software engineer who loves to code and build things."
-                
+                  value={data.description}
+                  onChange={(e) =>
+                    setData({ ...data, description: e.target.value })
+                  }
                 />
               </FormControl>
 
@@ -70,13 +134,19 @@ const CreateUserModal = () => {
                 <Flex gap={5}>
                   <Radio
                     value="male"
-                    
+                    onChange={(e) =>
+                      setData({ ...data, gender: e.target.value })
+                    }
+                    selected={data.gender === "male" ? true : false}
                   >
                     Male
                   </Radio>
                   <Radio
                     value="female"
-                   
+                    onChange={(e) =>
+                      setData({ ...data, gender: e.target.value })
+                    }
+                    selected={data.gender === "female" ? true : false}
                   >
                     Female
                   </Radio>
@@ -85,11 +155,7 @@ const CreateUserModal = () => {
             </ModalBody>
 
             <ModalFooter>
-              <Button
-                colorScheme="blue"
-                mr={3}
-                type="submit"
-              >
+              <Button colorScheme="blue" mr={3} type="submit">
                 Add
               </Button>
               <Button onClick={onClose}>Cancel</Button>
